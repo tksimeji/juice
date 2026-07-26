@@ -29,6 +29,11 @@ const COMMANDS: &[Command] = &[
         description: "Clear the terminal",
         handler: command_clear,
     },
+    Command {
+        name: "crash",
+        description: "Trigger a test exception",
+        handler: command_crash,
+    }
 ];
 
 pub fn execute(command_line: &str) {
@@ -95,4 +100,12 @@ fn command_el(_arguments: &str) {
 
 fn command_clear(_arguments: &str) {
     uart_write_str("\x1b[2J\x1b[H");
+}
+
+fn command_crash(_arguments: &str) {
+    uart_write_str("Triggering breakpoint exception...\n");
+
+    unsafe {
+        core::arch::asm!("brk #0");
+    }
 }

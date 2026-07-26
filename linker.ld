@@ -7,6 +7,10 @@ SECTIONS
     .text : ALIGN(4096)
     {
         KEEP(*(.text.boot))
+        
+        . = ALIGN(2048);
+        KEEP(*(.text.exceptions))
+        
         *(.text .text.*)
     }
 
