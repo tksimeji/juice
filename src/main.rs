@@ -4,10 +4,9 @@
 mod commands;
 mod uart;
 
+use crate::uart::{uart_read_byte, uart_write_byte, uart_write_hex_u64, uart_write_str};
 use core::arch::global_asm;
 use core::panic::PanicInfo;
-use core::ptr::{read_volatile, write_volatile};
-use crate::uart::{uart_read_byte, uart_write_byte, uart_write_hex_u64, uart_write_str};
 
 global_asm!(include_str!("boot.s"));
 global_asm!(include_str!("exceptions.s"));
