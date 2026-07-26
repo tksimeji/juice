@@ -3,5 +3,20 @@
 version = 4
 
 [[package]]
-name = "juice"
+name = "juice-api"
 version = "0.1.0"
+
+[[package]]
+name = "juice-boot-direct"
+version = "0.1.0"
+dependencies = [
+ "juice-api",
+ "juice-kernel",
+]
+
+[[package]]
+name = "juice-kernel"
+version = "0.1.0"
+dependencies = [
+ "juice-api",
+]

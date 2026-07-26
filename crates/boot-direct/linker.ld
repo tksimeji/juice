@@ -2,7 +2,8 @@ ENTRY(_start)
 
 SECTIONS
 {
-    . = 0x40080000;
+    . = 0x40200000;
+    __kernel_start = .;
 
     .text : ALIGN(4096)
     {
@@ -32,6 +33,9 @@ SECTIONS
         *(COMMON)
         _bss_end = .;
     }
+
+    . = ALIGN(4096);
+    __kernel_end = .;
 
     /DISCARD/ :
     {

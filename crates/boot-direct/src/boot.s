@@ -21,7 +21,7 @@ _start:
     msr VBAR_EL1, x0
     isb
 
-    bl kernel_main
+    bl boot_main
 
 .Lhang:
     wfe

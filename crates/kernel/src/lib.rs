@@ -1,18 +1,16 @@
 #![no_std]
-#![no_main]
 
 mod commands;
+mod memory;
 mod uart;
 
-use crate::uart::{uart_read_byte, uart_write_byte, uart_write_hex_u64, uart_write_str};
-use core::arch::global_asm;
 use core::panic::PanicInfo;
+use juice_api::boot::BootContext;
 
-global_asm!(include_str!("boot.s"));
-global_asm!(include_str!("exceptions.s"));
+core::arch::global_asm!(include_str!("exceptions.s"));
 
 fn print_prompt() {
-    uart_write_str("> ");
+    uart::write_str("> ");
 }
 
 fn exception_class_name(exception_class: u8) -> &'static str {
@@ -51,42 +49,37 @@ pub extern "C" fn exception_dispatch() -> ! {
 
     let exception_class = ((esr_el1 >> 26) & 0x3f) as u8;
 
-    uart_write_str("\n");
-    uart_write_str("=== KERNEL EXCEPTION ===\n");
+    uart::write_str("\n");
+    uart::write_str("=== KERNEL EXCEPTION ===\n");
 
-    uart_write_str("Type: ");
-    uart_write_str(exception_class_name(exception_class));
-    uart_write_str("\n");
+    uart::write_str("Type: ");
+    uart::write_str(exception_class_name(exception_class));
+    uart::write_str("\n");
 
-    uart_write_str("ESR_EL1:   ");
-    uart_write_hex_u64(esr_el1);
-    uart_write_str("\n");
+    uart::write_str("ESR_EL1:   ");
+    uart::write_hex_u64(esr_el1);
+    uart::write_str("\n");
 
-    uart_write_str("ELR_EL1:   ");
-    uart_write_hex_u64(elr_el1);
-    uart_write_str("\n");
+    uart::write_str("ELR_EL1:   ");
+    uart::write_hex_u64(elr_el1);
+    uart::write_str("\n");
 
-    uart_write_str("FAR_EL1:   ");
-    uart_write_hex_u64(far_el1);
-    uart_write_str("\n");
+    uart::write_str("FAR_EL1:   ");
+    uart::write_hex_u64(far_el1);
+    uart::write_str("\n");
 
-    uart_write_str("SPSR_EL1:   ");
-    uart_write_hex_u64(spsr_el1);
-    uart_write_str("\n");
+    uart::write_str("SPSR_EL1:   ");
+    uart::write_hex_u64(spsr_el1);
+    uart::write_str("\n");
 
-    uart_write_str("System halted.\n");
+    uart::write_str("System halted.\n");
 
-    loop {
-        unsafe {
-            core::arch::asm!("wfe");
-        }
-    }
+    halt()
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn kernel_main() -> ! {
-    uart_write_str("Juice OS\n");
-    uart_write_str("Type 'help' to see available commands.\n");
+pub fn start(boot_context: &BootContext<'_>) -> ! {
+    uart::write_str("Juice OS\n");
+    uart::write_str("Type 'help' to see available commands.\n");
 
     let mut input = [0u8; 64];
     let mut input_length = 0;
@@ -94,21 +87,21 @@ pub extern "C" fn kernel_main() -> ! {
     print_prompt();
 
     loop {
-        let byte = uart_read_byte();
+        let byte = uart::read_byte();
 
         match byte {
             b'\r' | b'\n' => {
-                uart_write_str("\n");
+                uart::write_str("\n");
 
                 let input_bytes = &input[..input_length];
 
                 match core::str::from_utf8(input_bytes) {
                     Ok(command_line) => {
-                        commands::execute(command_line);
+                        commands::execute(boot_context, command_line);
                     }
 
                     Err(_) => {
-                        uart_write_str("Invalid UTF-8 input.\n");
+                        uart::write_str("Invalid UTF-8 input.\n");
                     }
                 }
 
@@ -120,9 +113,9 @@ pub extern "C" fn kernel_main() -> ! {
                 if input_length > 0 {
                     input_length -= 1;
 
-                    uart_write_byte(8);
-                    uart_write_byte(b' ');
-                    uart_write_byte(8);
+                    uart::write_byte(8);
+                    uart::write_byte(b' ');
+                    uart::write_byte(8);
                 }
             }
 
@@ -131,9 +124,9 @@ pub extern "C" fn kernel_main() -> ! {
                     input[input_length] = byte;
                     input_length += 1;
 
-                    uart_write_byte(byte);
+                    uart::write_byte(byte);
                 } else {
-                    uart_write_byte(7);
+                    uart::write_byte(7);
                 }
             }
 
@@ -142,13 +135,16 @@ pub extern "C" fn kernel_main() -> ! {
     }
 }
 
-#[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    uart_write_str("\nKernel panic!\n");
-
+fn halt() -> ! {
     loop {
         unsafe {
             core::arch::asm!("wfe");
         }
     }
+}
+
+#[panic_handler]
+fn panic(_info: &PanicInfo) -> ! {
+    uart::write_str("\nKernel panic!\n");
+    halt()
 }

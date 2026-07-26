@@ -1,9 +1,15 @@
-[package]
-name = "juice"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+resolver = "3"
 
-[dependencies]
+members = [
+    "crates/api",
+    "crates/boot-direct",
+    "crates/kernel",
+]
+
+default-members = [
+    "crates/boot-direct",
+]
 
 [profile.dev]
 panic = "abort"

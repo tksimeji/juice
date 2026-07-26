@@ -7,7 +7,7 @@ const UART_FR: usize = UART_BASE + 0x18;
 const UART_FR_TX_FULL: u32 = 1 << 5;
 const UART_FR_TX_EMPTY: u32 = 1 << 4;
 
-pub(crate) fn uart_write_byte(byte: u8) {
+pub(crate) fn write_byte(byte: u8) {
     unsafe {
         while read_volatile(UART_FR as *const u32) & UART_FR_TX_FULL != 0 {
             core::hint::spin_loop();
@@ -16,30 +16,30 @@ pub(crate) fn uart_write_byte(byte: u8) {
     }
 }
 
-pub(crate) fn uart_write_hex_u64(value: u64) {
+pub(crate) fn write_hex_u64(value: u64) {
     const HEX_DIGITS: &[u8; 16] = b"0123456789ABCDEF";
 
-    uart_write_str("0x");
+    write_str("0x");
 
     for index in (0..16).rev() {
         let shift = index * 4;
         let digit = ((value >> shift) & 0x0f) as usize;
 
-        uart_write_byte(HEX_DIGITS[digit]);
+        write_byte(HEX_DIGITS[digit]);
     }
 }
 
-pub(crate) fn uart_write_str(text: &str) {
+pub(crate) fn write_str(text: &str) {
     for byte in text.bytes() {
         if byte == b'\n' {
-            uart_write_byte(b'\r');
+            write_byte(b'\r');
         }
 
-        uart_write_byte(byte);
+        write_byte(byte);
     }
 }
 
-pub(crate) fn uart_read_byte() -> u8 {
+pub(crate) fn read_byte() -> u8 {
     unsafe {
         while read_volatile(UART_FR as *const u32) & UART_FR_TX_EMPTY != 0 {
             core::hint::spin_loop()

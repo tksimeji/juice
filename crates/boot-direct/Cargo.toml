@@ -1,0 +1,8 @@
+[package]
+name = "juice-boot-direct"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+juice-api = { path = "../api" }
+juice-kernel = { path = "../kernel" }
