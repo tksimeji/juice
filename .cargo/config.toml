@@ -1,0 +1,10 @@
+[build]
+target = "aarch64-unknown-none-softfloat"
+
+[target.aarch64-unknown-none-softfloat]
+runner = "qemu-system-aarch64 -machine virt -cpu cortex-a72 -m 128M -nographic -kernel"
+
+rustflags = [
+    "-C",
+    "link-arg=--script=linker.ld"
+]
